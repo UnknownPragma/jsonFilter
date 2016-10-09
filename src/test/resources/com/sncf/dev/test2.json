@@ -1,0 +1,20 @@
+{
+	"a": {
+		"aa": {
+			"aaa": "val_aaa",
+			"aab": "val_aab"
+		},
+		"ab": {
+			"aba": "val_aba",
+			"abb": "val_abb"
+		}
+	},
+	"b": [
+		{
+			"b1": "val_b1"
+		},
+		{
+			"b2": "val_b2"
+		}
+	]
+}
