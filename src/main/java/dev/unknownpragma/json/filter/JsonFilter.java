@@ -1,4 +1,4 @@
-package com.scnf.dev.json.filter;
+package dev.unknownpragma.json.filter;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -10,8 +10,9 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.scnf.dev.json.filter.param.ParamParser;
-import com.scnf.dev.json.filter.param.ParamTree;
+
+import dev.unknownpragma.json.filter.fieldfilter.FieldFilterParser;
+import dev.unknownpragma.json.filter.fieldfilter.FieldFilterTree;
 
 public class JsonFilter {
 
@@ -33,8 +34,8 @@ public class JsonFilter {
 			try (JsonParser parser = fact.createParser(in); JsonGenerator generator = fact.createGenerator(out)) {
 
 				// parse filter parameters
-				ParamTree inTree = includes == null ? null : new ParamParser(includes).parse();
-				ParamTree exTree = excludes == null ? null : new ParamParser(excludes).parse();
+				FieldFilterTree inTree = includes == null ? null : new FieldFilterParser(includes).parse();
+				FieldFilterTree exTree = excludes == null ? null : new FieldFilterParser(excludes).parse();
 
 				// create parser object
 				JsonFilterParser jsp = new JsonFilterParser(parser, inTree, exTree);

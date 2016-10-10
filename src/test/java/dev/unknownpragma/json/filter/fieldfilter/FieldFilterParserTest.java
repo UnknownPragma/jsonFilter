@@ -1,4 +1,4 @@
-package com.sncf.dev.json.filter.param;
+package dev.unknownpragma.json.filter.fieldfilter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,18 +8,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.scnf.dev.json.filter.param.ParamParser;
-import com.scnf.dev.json.filter.param.ParameterSyntaxException;
+import dev.unknownpragma.json.filter.fieldfilter.FieldFilterParser;
+import dev.unknownpragma.json.filter.fieldfilter.FieldFilterSyntaxException;
 
 @RunWith(JUnit4.class)
-public class ParamParserTest {
+public class FieldFilterParserTest {
 
 	@Test
-	public void test() throws ParameterSyntaxException {
-		Assert.assertNull(new ParamParser("").parse());
+	public void test() throws FieldFilterSyntaxException {
+		Assert.assertNull(new FieldFilterParser("").parse());
 		
 		try {
-			new ParamParser(null);
+			new FieldFilterParser(null);
 			Assert.fail("Test should failed with param : null");
 		} catch (IllegalArgumentException e) {
 			Assert.assertTrue(e.getClass().equals(IllegalArgumentException.class));
@@ -50,10 +50,10 @@ public class ParamParserTest {
 
 		for (String entry : entries) {
 			try {
-				new ParamParser(entry).parse();
+				new FieldFilterParser(entry).parse();
 				Assert.fail("Test should failed with param : " + entry);
-			} catch (ParameterSyntaxException e) {
-				Assert.assertTrue(e.getClass().equals(ParameterSyntaxException.class));
+			} catch (FieldFilterSyntaxException e) {
+				Assert.assertTrue(e.getClass().equals(FieldFilterSyntaxException.class));
 			}
 		}
 
@@ -66,7 +66,7 @@ public class ParamParserTest {
 		entries.add("a(aa,ab),b(ba)");
 		entries.add("a(aa,ab(aba,abb),ac),b(ba)");
 		for (String entry : entries) {
-			Assert.assertEquals(entry, new ParamParser(entry).parse().desc());
+			Assert.assertEquals(entry, new FieldFilterParser(entry).parse().desc());
 		}
 	}
 }

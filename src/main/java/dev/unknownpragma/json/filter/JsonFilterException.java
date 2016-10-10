@@ -1,4 +1,4 @@
-package com.scnf.dev.json.filter;
+package dev.unknownpragma.json.filter;
 
 public class JsonFilterException extends Exception {
 

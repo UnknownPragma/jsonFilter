@@ -1,4 +1,4 @@
-package com.sncf.dev;
+package dev.unknownpragma.json.filter;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.scnf.dev.json.filter.JsonFilter;
+import dev.unknownpragma.json.filter.JsonFilter;
 
 @RunWith(JUnit4.class)
 public class JsonFilterTest {
@@ -29,9 +29,14 @@ public class JsonFilterTest {
 		InputStreamReader reader = new InputStreamReader(this.getClass().getResourceAsStream("test1.json"));
 		StringWriter writer = new StringWriter();
 
-		jf.filter(reader, writer, "plop", null);
+		jf.filter(reader, writer, "b(bd)", null);
+		Assert.assertEquals(fileToString("test1.result1.json"), writer.toString());
 
-		LOG.info("res = {}", writer.toString());
+		reader = new InputStreamReader(this.getClass().getResourceAsStream("test1.json"));
+		writer = new StringWriter();
+		
+		jf.filter(reader, writer, "c(ca)", null);
+		Assert.assertEquals(fileToString("test1.result2.json"), writer.toString());
 	}
 
 	@Test

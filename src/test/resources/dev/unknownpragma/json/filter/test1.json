@@ -1,3 +1,64 @@
 {
-	"plop" : "test"	
+	"a": {
+		"aa": {
+			"aaa": "val_aaa",
+			"aab": "val_aab"
+		},
+		"ab": {
+			"aba": "val_aba",
+			"abb": "val_abb"
+		}
+	},
+	"b": [
+		{
+			"ba": "val_ba",
+			"bb": "val_bb",
+			"bc": "val_bc"
+		},
+		{
+			"ba": "val_ba",
+			"bb": "val_bb",
+			"bd": "val_bd"
+		},
+		{
+			"ba": "val_ba",
+			"bb": "val_bb",
+			"bc": "val_bc",
+			"bd": "val_bd"
+		},
+		{
+			"ba": "val_ba",
+			"bb": "val_bb",
+			"bc": "val_bc",
+			"be": "val_be"
+		}
+	],
+	"c": [
+		{
+			"ca": "val_ca",
+			"cb": [
+				{
+					"cba": [
+						{
+							"cbaa": {
+								"cbaaa": {
+									"cbaaaa": "val_cbaaaa"
+								}
+							}
+						},
+						{
+							"cbaa": {
+								"cbaaa": {
+									"cbaaaa": "val_cbaaaa"
+								}
+							}
+						}
+					]
+				},
+				{
+					"ca": "val_ca"
+				}
+			]
+		}
+	]
 }

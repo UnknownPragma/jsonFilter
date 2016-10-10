@@ -1,4 +1,4 @@
-package com.scnf.dev.json.filter;
+package dev.unknownpragma.json.filter;
 
 import java.io.IOException;
 
@@ -7,7 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.scnf.dev.json.filter.param.ParamTree;
+
+import dev.unknownpragma.json.filter.fieldfilter.FieldFilterTree;
 
 public class JsonFilterParser {
 
@@ -15,11 +16,11 @@ public class JsonFilterParser {
 	
 	private JsonParser jsonParser;
 
-	private ParamTree curIncNode;
+	private FieldFilterTree curIncNode;
 
-	private ParamTree parentIncNode;
+	private FieldFilterTree parentIncNode;
 
-	private ParamTree excludes;
+	private FieldFilterTree excludes;
 
 	private String currentFieldName = null;
 
@@ -27,7 +28,7 @@ public class JsonFilterParser {
 	
 	private boolean tokenExclude = false;
 
-	public JsonFilterParser(JsonParser parser, ParamTree includes, ParamTree excludes) {
+	public JsonFilterParser(JsonParser parser, FieldFilterTree includes, FieldFilterTree excludes) {
 		this.jsonParser = parser;
 		this.curIncNode = includes;
 		this.parentIncNode = null;
@@ -65,7 +66,7 @@ public class JsonFilterParser {
 		// if includes is null ignore it else
 		if (curIncNode != null) {
 			// look if this field is include
-			ParamTree tmpIncludes = curIncNode.getChild(currentFieldName);
+			FieldFilterTree tmpIncludes = curIncNode.getChild(currentFieldName);
 			if (tmpIncludes != null) {
 				skip = false;
 			}
@@ -102,7 +103,7 @@ public class JsonFilterParser {
 		// if no includes where specifed we ignore it
 		if (curIncNode != null && currentFieldName != null) {
 			// go down the tree following the field name
-			ParamTree tmpIncludes = curIncNode.getChild(currentFieldName);
+			FieldFilterTree tmpIncludes = curIncNode.getChild(currentFieldName);
 			parentIncNode = curIncNode;
 			curIncNode = tmpIncludes;
 		}
@@ -112,7 +113,7 @@ public class JsonFilterParser {
 		// if no includes where specifed we ignore it
 		if (parentIncNode != null) {
 			// go up the param tree from the current field name
-			ParamTree tmpIncludes = parentIncNode.getParent();
+			FieldFilterTree tmpIncludes = parentIncNode.getParent();
 			curIncNode = parentIncNode;
 			parentIncNode = tmpIncludes;
 			
@@ -124,11 +125,11 @@ public class JsonFilterParser {
 		return jsonParser;
 	}
 
-	public ParamTree getIncludes() {
+	public FieldFilterTree getIncludes() {
 		return curIncNode;
 	}
 
-	public ParamTree getExcludes() {
+	public FieldFilterTree getExcludes() {
 		return excludes;
 	}
 

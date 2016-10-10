@@ -1,15 +1,15 @@
-package com.scnf.dev.json.filter.param;
+package dev.unknownpragma.json.filter.fieldfilter;
 
-import static com.scnf.dev.json.filter.param.ParamTokenType.COMMA;
-import static com.scnf.dev.json.filter.param.ParamTokenType.FIELD_NAME;
-import static com.scnf.dev.json.filter.param.ParamTokenType.OPEN_PARENTHESIS;
+import static dev.unknownpragma.json.filter.fieldfilter.FieldFilterTokenType.COMMA;
+import static dev.unknownpragma.json.filter.fieldfilter.FieldFilterTokenType.FIELD_NAME;
+import static dev.unknownpragma.json.filter.fieldfilter.FieldFilterTokenType.OPEN_PARENTHESIS;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ParamParser {
+public class FieldFilterParser {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ParamParser.class);
+	private static final Logger LOG = LoggerFactory.getLogger(FieldFilterParser.class);
 
 	private String fieldsFilter;
 
@@ -17,7 +17,7 @@ public class ParamParser {
 
 	private int parenthesisCount = 0;
 
-	public ParamParser(String fieldsFilter) {
+	public FieldFilterParser(String fieldsFilter) {
 		if (fieldsFilter == null) {
 			throw new IllegalArgumentException("'fieldsFilter' argument can't be null");
 		}
@@ -25,18 +25,18 @@ public class ParamParser {
 		this.fieldsFilter = fieldsFilter;
 	}
 
-	public ParamTree parse() throws ParameterSyntaxException {
-		ParamTree res = null;
-		ParamToken token = null;
-		ParamToken prevT = null;
+	public FieldFilterTree parse() throws FieldFilterSyntaxException {
+		FieldFilterTree res = null;
+		FieldFilterToken token = null;
+		FieldFilterToken prevT = null;
 
 		try {
 			// walk through the string
 			if (!fieldsFilter.isEmpty()) {
 				token = nextToken();
 				// create the root param tree
-				res = new ParamTree(null, new ParamToken(null, null));
-				ParamTree curTree = res;
+				res = new FieldFilterTree(null, new FieldFilterToken(null, null));
+				FieldFilterTree curTree = res;
 
 				// start loop
 				while (token != null) {
@@ -57,7 +57,7 @@ public class ParamParser {
 			}
 
 		} catch (Exception e) {
-			throw new ParameterSyntaxException(fieldsFilter, curPos, token, prevT, e);
+			throw new FieldFilterSyntaxException(fieldsFilter, curPos, token, prevT, e);
 		}
 
 		LOG.debug("Parse field filter \"{}\" to : {}", fieldsFilter, res);
@@ -65,8 +65,8 @@ public class ParamParser {
 		return res;
 	}
 
-	private ParamToken nextToken() {
-		ParamToken res = null;
+	private FieldFilterToken nextToken() {
+		FieldFilterToken res = null;
 		String str = "";
 
 		for (int i = curPos; i < fieldsFilter.length(); i++) {
@@ -76,9 +76,9 @@ public class ParamParser {
 			case '(':
 			case ')':
 				if (str.isEmpty()) {
-					res = new ParamToken(String.valueOf(c));
+					res = new FieldFilterToken(String.valueOf(c));
 				} else {
-					res = new ParamToken(str);
+					res = new FieldFilterToken(str);
 					str = "";
 				}
 				break;
@@ -95,7 +95,7 @@ public class ParamParser {
 
 		// final condition
 		if (str.length() > 0) {
-			res = new ParamToken(str);
+			res = new FieldFilterToken(str);
 		}
 
 		if (res != null) {
@@ -105,7 +105,7 @@ public class ParamParser {
 
 	}
 
-	private ParamTree processToken(ParamTree curTree, ParamToken token, ParamToken prevT) {
+	private FieldFilterTree processToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
 		switch (token.getType()) {
 		case FIELD_NAME:
 			curTree = processParamToken(curTree, token, prevT);
@@ -127,19 +127,19 @@ public class ParamParser {
 		return curTree;
 	}
 
-	private ParamTree processParamToken(ParamTree curTree, ParamToken token, ParamToken prevT) {
+	private FieldFilterTree processParamToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
 		curTree.addChild(token);
 		return curTree;
 	}
 
-	private ParamTree processCommaToken(ParamTree curTree, ParamToken token, ParamToken prevT) {
+	private FieldFilterTree processCommaToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
 		if (prevT == null || (prevT.getType() == COMMA || prevT.getType() == OPEN_PARENTHESIS)) {
 			throw new IllegalArgumentException("',' can't be after ',' , '(' or be at first position");
 		}
 		return curTree;
 	}
 
-	private ParamTree processOpenParenthesisToken(ParamTree curTree, ParamToken token, ParamToken prevT) {
+	private FieldFilterTree processOpenParenthesisToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
 		if (prevT == null || prevT.getType() != FIELD_NAME) {
 			throw new IllegalArgumentException("'(' can't be aftet ',', '(', ')' or ba at first position.");
 		}
@@ -152,12 +152,12 @@ public class ParamParser {
 		return curTree;
 	}
 
-	private ParamTree processCloseParenthesisToken(ParamTree curTree, ParamToken token, ParamToken prevT) {
+	private FieldFilterTree processCloseParenthesisToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
 		if (prevT == null || prevT.getType() == COMMA || prevT.getType() == OPEN_PARENTHESIS) {
 			throw new IllegalArgumentException("')' can't be after ',', '(' or be at first pos");
 		}
 
-		ParamTree parentTree = curTree.getParent();
+		FieldFilterTree parentTree = curTree.getParent();
 		if (parentTree == null) {
 			throw new IllegalArgumentException("no '(' matching ')'");
 		}

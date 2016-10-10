@@ -1,10 +1,10 @@
-package com.scnf.dev.json.filter.param;
+package dev.unknownpragma.json.filter.fieldfilter;
 
-public enum ParamTokenType {
+public enum FieldFilterTokenType {
 	COMMA, OPEN_PARENTHESIS, CLOSE_PARENTHESIS, FIELD_NAME, INCLUDE_ALL, EXCLUDE_ALL;
 		
-	public static ParamTokenType fromValue(String value) {
-		ParamTokenType t = FIELD_NAME;
+	public static FieldFilterTokenType fromValue(String value) {
+		FieldFilterTokenType t = FIELD_NAME;
 		
 		if(",".equals(value)) {
 			t = COMMA;

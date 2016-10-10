@@ -1,17 +1,17 @@
-package com.scnf.dev.json.filter.param;
+package dev.unknownpragma.json.filter.fieldfilter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ParamTree {
+public class FieldFilterTree {
 
-	private ParamToken data;
+	private FieldFilterToken data;
 
-	private ParamTree parent;
+	private FieldFilterTree parent;
 
-	private List<ParamTree> children = new ArrayList<>();
+	private List<FieldFilterTree> children = new ArrayList<>();
 
-	public ParamTree(ParamTree parent, ParamToken data) {
+	public FieldFilterTree(FieldFilterTree parent, FieldFilterToken data) {
 		this.parent = parent;
 		this.data = data;
 
@@ -20,24 +20,24 @@ public class ParamTree {
 		}
 	}
 
-	public ParamTree addChild(ParamToken child) {
+	public FieldFilterTree addChild(FieldFilterToken child) {
 		if (getChild(child) != null) {
 			throw new IllegalArgumentException("Le token " + child + " existe déjà dans le noeud " + this);
 		}
 
-		ParamTree childNode = new ParamTree(this, child);
+		FieldFilterTree childNode = new FieldFilterTree(this, child);
 		this.children.add(childNode);
 
 		return childNode;
 	}
 
-	public ParamTree getChild(ParamToken child) {
+	public FieldFilterTree getChild(FieldFilterToken child) {
 		return getChild(child.getValue());
 	}
 
-	public ParamTree getChild(String childValue) {
-		ParamTree res = null;
-		for (ParamTree aChild : this.children) {
+	public FieldFilterTree getChild(String childValue) {
+		FieldFilterTree res = null;
+		for (FieldFilterTree aChild : this.children) {
 			if (aChild.getData().getValue() != null && aChild.getData().getValue().equals(childValue)) {
 				res = aChild;
 			}
@@ -45,19 +45,19 @@ public class ParamTree {
 		return res;
 	}
 
-	public ParamTree getParent() {
+	public FieldFilterTree getParent() {
 		return parent;
 	}
 
-	public void setParent(ParamTree parent) {
+	public void setParent(FieldFilterTree parent) {
 		this.parent = parent;
 	}
 
-	public ParamToken getData() {
+	public FieldFilterToken getData() {
 		return data;
 	}
 
-	public List<ParamTree> getChildren() {
+	public List<FieldFilterTree> getChildren() {
 		return children;
 	}
 
@@ -73,8 +73,8 @@ public class ParamTree {
 		if (!children.isEmpty()) {
 			res += isRoot?"":"(";
 			boolean first = true;
-			for (ParamTree pt : children) {
-				if(first == true) {
+			for (FieldFilterTree pt : children) {
+				if(first) {
 					first = false;
 				} else {
 					res += ",";
