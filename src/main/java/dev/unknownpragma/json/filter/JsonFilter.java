@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,24 +22,19 @@ public class JsonFilter {
 	public void filter(Reader in, Writer out, String includes, String excludes) throws JsonFilterException {
 		try {
 			// check parameters
-			if (in == null) {
-				throw new IllegalArgumentException("Le paramètre 'in' ne peut être null.");
-			}
-			if (out == null) {
-				throw new IllegalArgumentException("Le paramètre 'out' ne peut être null.");
-			}
-
+			Validate.notNull(in, "'in' argument can't be null");
+			Validate.notNull(out, "'out' argument can't be null");
+			
 			// create Jackson object
 			JsonFactory fact = new JsonFactory();
 
 			try (JsonParser parser = fact.createParser(in); JsonGenerator generator = fact.createGenerator(out)) {
 
 				// parse filter parameters
-				FieldFilterTree inTree = includes == null ? null : new FieldFilterParser(includes).parse();
-				FieldFilterTree exTree = excludes == null ? null : new FieldFilterParser(excludes).parse();
-
+				FieldFilterTree tree = new FieldFilterParser(includes, excludes).parse();
+				
 				// create parser object
-				JsonFilterParser jsp = new JsonFilterParser(parser, inTree, exTree);
+				JsonFilterParser jsp = new JsonFilterParser(parser, tree);
 
 				// start stream process
 				while (jsp.nextToken() != null) {

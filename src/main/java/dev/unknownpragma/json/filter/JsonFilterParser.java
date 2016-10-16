@@ -13,27 +13,23 @@ import dev.unknownpragma.json.filter.fieldfilter.FieldFilterTree;
 public class JsonFilterParser {
 
 	private static final Logger LOG = LoggerFactory.getLogger(JsonFilterParser.class);
-	
+
 	private JsonParser jsonParser;
 
-	private FieldFilterTree curIncNode;
+	private FieldFilterTree curNode;
 
-	private FieldFilterTree parentIncNode;
-
-	private FieldFilterTree excludes;
+	private FieldFilterTree parentNode;
 
 	private String currentFieldName = null;
 
 	private boolean structureFullyInclude = false;
-	
+
 	private boolean tokenExclude = false;
 
-	public JsonFilterParser(JsonParser parser, FieldFilterTree includes, FieldFilterTree excludes) {
+	public JsonFilterParser(JsonParser parser, FieldFilterTree tree) {
 		this.jsonParser = parser;
-		this.curIncNode = includes;
-		this.parentIncNode = null;
-		this.excludes = excludes;
-
+		this.curNode = tree;
+		this.parentNode = null;
 	}
 
 	public JsonToken nextToken() throws IOException {
@@ -41,7 +37,7 @@ public class JsonFilterParser {
 
 		structureFullyInclude = false;
 		tokenExclude = false;
-		
+
 		// si c'est un nom de champs
 		if (JsonToken.FIELD_NAME.equals(t)) {
 			processFieldToken();
@@ -54,9 +50,9 @@ public class JsonFilterParser {
 		} else if (JsonToken.END_ARRAY.equals(t)) {
 			processEndObject();
 		}
-		
-		LOG.debug("processed " + t + " '" + currentFieldName + "' - curnode " + curIncNode);
-		
+
+		LOG.debug("processed {} '{}' - curNode {}", t, currentFieldName, curNode);
+
 		return t;
 	}
 
@@ -64,9 +60,9 @@ public class JsonFilterParser {
 		boolean skip = true;
 
 		// if includes is null ignore it else
-		if (curIncNode != null) {
+		if (curNode != null) {
 			// look if this field is include
-			FieldFilterTree tmpIncludes = curIncNode.getChild(currentFieldName);
+			FieldFilterTree tmpIncludes = curNode.getChild(currentFieldName);
 			if (tmpIncludes != null) {
 				skip = false;
 			}
@@ -93,7 +89,7 @@ public class JsonFilterParser {
 		if (isFieldSkipped()) {
 			tokenExclude = true;
 		} else {
-			if (curIncNode == null || curIncNode.getChild(currentFieldName).getChildren().isEmpty()) {
+			if (curNode == null || curNode.getChild(currentFieldName).getChildren().isEmpty()) {
 				structureFullyInclude = true;
 			}
 		}
@@ -101,38 +97,30 @@ public class JsonFilterParser {
 
 	private void processStartObject() {
 		// if no includes where specifed we ignore it
-		if (curIncNode != null && currentFieldName != null) {
+		if (curNode != null && currentFieldName != null) {
 			// go down the tree following the field name
-			FieldFilterTree tmpIncludes = curIncNode.getChild(currentFieldName);
-			parentIncNode = curIncNode;
-			curIncNode = tmpIncludes;
+			FieldFilterTree tmpIncludes = curNode.getChild(currentFieldName);
+			parentNode = curNode;
+			curNode = tmpIncludes;
 		}
 	}
 
 	private void processEndObject() {
 		// if no includes where specifed we ignore it
-		if (parentIncNode != null) {
+		if (parentNode != null) {
 			// go up the param tree from the current field name
-			FieldFilterTree tmpIncludes = parentIncNode.getParent();
-			curIncNode = parentIncNode;
-			parentIncNode = tmpIncludes;
-			
-			currentFieldName = curIncNode.getData().getValue(); 
+			FieldFilterTree tmpIncludes = parentNode.getParent();
+			curNode = parentNode;
+			parentNode = tmpIncludes;
+
+			currentFieldName = curNode.getData().getValue();
 		}
 	}
 
 	public JsonParser getJsonParser() {
 		return jsonParser;
 	}
-
-	public FieldFilterTree getIncludes() {
-		return curIncNode;
-	}
-
-	public FieldFilterTree getExcludes() {
-		return excludes;
-	}
-
+	
 	public boolean isStructureFullyInclude() {
 		return structureFullyInclude;
 	}
@@ -140,5 +128,5 @@ public class JsonFilterParser {
 	public boolean isTokenExclude() {
 		return tokenExclude;
 	}
-	
+
 }

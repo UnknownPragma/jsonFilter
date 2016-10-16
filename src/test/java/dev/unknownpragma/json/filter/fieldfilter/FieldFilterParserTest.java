@@ -16,15 +16,12 @@ public class FieldFilterParserTest {
 
 	@Test
 	public void test() throws FieldFilterSyntaxException {
-		Assert.assertNull(new FieldFilterParser("").parse());
 		
-		try {
-			new FieldFilterParser(null);
-			Assert.fail("Test should failed with param : null");
-		} catch (IllegalArgumentException e) {
-			Assert.assertTrue(e.getClass().equals(IllegalArgumentException.class));
-		}
-
+		Assert.assertEquals("", new FieldFilterParser(null,null).parse().desc());
+		Assert.assertEquals("", new FieldFilterParser("",null).parse().desc());
+		Assert.assertEquals("", new FieldFilterParser(null,"").parse().desc());
+		Assert.assertEquals("", new FieldFilterParser(" ","").parse().desc());
+		
 		List<String> entries = new ArrayList<String>();
 
 		// around ","
@@ -50,7 +47,7 @@ public class FieldFilterParserTest {
 
 		for (String entry : entries) {
 			try {
-				new FieldFilterParser(entry).parse();
+				new FieldFilterParser(entry,null).parse();
 				Assert.fail("Test should failed with param : " + entry);
 			} catch (FieldFilterSyntaxException e) {
 				Assert.assertTrue(e.getClass().equals(FieldFilterSyntaxException.class));
@@ -66,7 +63,7 @@ public class FieldFilterParserTest {
 		entries.add("a(aa,ab),b(ba)");
 		entries.add("a(aa,ab(aba,abb),ac),b(ba)");
 		for (String entry : entries) {
-			Assert.assertEquals(entry, new FieldFilterParser(entry).parse().desc());
+			Assert.assertEquals(entry, new FieldFilterParser(entry,null).parse().desc());
 		}
 	}
 }

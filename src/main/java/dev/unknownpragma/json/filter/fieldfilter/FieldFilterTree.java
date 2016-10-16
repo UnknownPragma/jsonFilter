@@ -11,6 +11,10 @@ public class FieldFilterTree {
 
 	private List<FieldFilterTree> children = new ArrayList<>();
 
+	static FieldFilterTree createRoot() {
+		return new FieldFilterTree(null, new FieldFilterToken(null, null));
+	}
+	
 	public FieldFilterTree(FieldFilterTree parent, FieldFilterToken data) {
 		this.parent = parent;
 		this.data = data;

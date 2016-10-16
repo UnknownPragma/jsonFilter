@@ -55,7 +55,6 @@ public class JsonFilterTest {
 	@Test
 	public void test3() throws Exception {
 		InputStreamReader reader = new InputStreamReader(this.getClass().getResourceAsStream("test3.json"));
-		;
 		StringWriter writer = new StringWriter();
 
 		jf.filter(reader, writer, null, null);

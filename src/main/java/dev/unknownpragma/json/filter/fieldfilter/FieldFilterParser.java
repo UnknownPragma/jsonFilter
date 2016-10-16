@@ -4,6 +4,7 @@ import static dev.unknownpragma.json.filter.fieldfilter.FieldFilterTokenType.COM
 import static dev.unknownpragma.json.filter.fieldfilter.FieldFilterTokenType.FIELD_NAME;
 import static dev.unknownpragma.json.filter.fieldfilter.FieldFilterTokenType.OPEN_PARENTHESIS;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,96 +12,49 @@ public class FieldFilterParser {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FieldFilterParser.class);
 
-	private String fieldsFilter;
+	private FieldFilterTokenizer incFields;
 
-	private int curPos = 0;
+	private FieldFilterTokenizer excFields;
 
 	private int parenthesisCount = 0;
 
-	public FieldFilterParser(String fieldsFilter) {
-		if (fieldsFilter == null) {
-			throw new IllegalArgumentException("'fieldsFilter' argument can't be null");
-		}
-
-		this.fieldsFilter = fieldsFilter;
+	public FieldFilterParser(String incFields, String excFields) {
+		this.incFields = new FieldFilterTokenizer(StringUtils.trimToEmpty(incFields));
+		this.excFields = new FieldFilterTokenizer(StringUtils.trimToEmpty(excFields));
 	}
 
 	public FieldFilterTree parse() throws FieldFilterSyntaxException {
-		FieldFilterTree res = null;
-		FieldFilterToken token = null;
+		FieldFilterTree res = FieldFilterTree.createRoot();
+		FieldFilterTree curTree = res;
+		FieldFilterToken token = incFields.nextToken();
 		FieldFilterToken prevT = null;
 
 		try {
-			// walk through the string
-			if (!fieldsFilter.isEmpty()) {
-				token = nextToken();
-				// create the root param tree
-				res = new FieldFilterTree(null, new FieldFilterToken(null, null));
-				FieldFilterTree curTree = res;
-
-				// start loop
-				while (token != null) {
-					curTree = processToken(curTree, token, prevT);
-					// then current token become previous and fetch next one
-					prevT = token;
-					token = nextToken();
-				}
-
-				// final condition
-				if (prevT != null && (prevT.getType() == OPEN_PARENTHESIS || prevT.getType() == COMMA)) {
-					throw new IllegalArgumentException("Filter cannot and with a ',' or a '('.");
-				}
-
-				if (parenthesisCount != 0) {
-					throw new IllegalArgumentException("No matching between '(' and ')' - diff=" + parenthesisCount);
-				}
+			// start loop
+			while (token != null) {
+				curTree = processToken(curTree, token, prevT);
+				// then current token become previous and fetch next one
+				prevT = token;
+				token = incFields.nextToken();
 			}
 
-		} catch (Exception e) {
-			throw new FieldFilterSyntaxException(fieldsFilter, curPos, token, prevT, e);
-		}
-
-		LOG.debug("Parse field filter \"{}\" to : {}", fieldsFilter, res);
-
-		return res;
-	}
-
-	private FieldFilterToken nextToken() {
-		FieldFilterToken res = null;
-		String str = "";
-
-		for (int i = curPos; i < fieldsFilter.length(); i++) {
-			char c = fieldsFilter.charAt(i);
-			switch (c) {
-			case ',':
-			case '(':
-			case ')':
-				if (str.isEmpty()) {
-					res = new FieldFilterToken(String.valueOf(c));
-				} else {
-					res = new FieldFilterToken(str);
-					str = "";
-				}
-				break;
-			default:
-				str = str + c;
-				break;
+			// final condition
+			if (prevT != null && (prevT.getType() == OPEN_PARENTHESIS || prevT.getType() == COMMA)) {
+				throw new IllegalArgumentException("Filter cannot and with a ',' or a '('.");
 			}
 
-			// if found a result leave loop
-			if (res != null) {
-				break;
+			if (parenthesisCount != 0) {
+				throw new IllegalArgumentException("No matching between '(' and ')' - diff=" + parenthesisCount);
 			}
+
+		} catch (
+
+		Exception e) {
+			throw new FieldFilterSyntaxException(incFields, token, prevT, e);
 		}
 
-		// final condition
-		if (str.length() > 0) {
-			res = new FieldFilterToken(str);
-		}
+		LOG.debug("Parse field filter \"{}\" to : {}", incFields, res);
 
-		if (res != null) {
-			curPos += res.getValue().length();
-		}
 		return res;
 
 	}
