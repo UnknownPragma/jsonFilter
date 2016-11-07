@@ -2,6 +2,8 @@ package dev.unknownpragma.json.filter.fieldfilter;
 
 import static dev.unknownpragma.json.filter.fieldfilter.FieldFilterTokenType.*;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class FieldFilterToken {
 	
 	private FieldFilterTokenType type;
@@ -12,7 +14,7 @@ public class FieldFilterToken {
 		this.type = type;
 		this.value = value;
 			
-		if(type == FIELD_NAME && (value == null || value.isEmpty())) {
+		if(type == FIELD_NAME && StringUtils.isEmpty(value) ) {
 			throw new IllegalArgumentException("token '" + FIELD_NAME.name() + "' must have a value." );
 		}		
 	}

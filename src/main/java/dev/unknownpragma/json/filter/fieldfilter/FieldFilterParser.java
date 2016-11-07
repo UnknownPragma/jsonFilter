@@ -16,7 +16,23 @@ public class FieldFilterParser {
 
 	private FieldFilterTokenizer excFields;
 
+	// parsing context properties /////////////////////////////
+
+	private FieldFilterTokenizer curFieldsFilter = null;
+
 	private int parenthesisCount = 0;
+
+	private FieldFilterTree curTree = null;
+
+	private FieldFilterToken curToken = null;
+
+	private FieldFilterToken prevToken = null;
+
+	private boolean includeField;
+
+	private int skipCounterRef;
+
+	private boolean skip;
 
 	public FieldFilterParser(String incFields, String excFields) {
 		this.incFields = new FieldFilterTokenizer(StringUtils.trimToEmpty(incFields));
@@ -25,97 +41,146 @@ public class FieldFilterParser {
 
 	public FieldFilterTree parse() throws FieldFilterSyntaxException {
 		FieldFilterTree res = FieldFilterTree.createRoot();
-		FieldFilterTree curTree = res;
-		FieldFilterToken token = incFields.nextToken();
-		FieldFilterToken prevT = null;
+		curTree = res;
 
 		try {
-			// start loop
-			while (token != null) {
-				curTree = processToken(curTree, token, prevT);
-				// then current token become previous and fetch next one
-				prevT = token;
-				token = incFields.nextToken();
-			}
+			// parse includes fields
+			includeField = true;
+			curFieldsFilter = incFields;
+			LOG.debug("Parse include filter : {}", incFields);
+			parseFieldFilter();
 
-			// final condition
-			if (prevT != null && (prevT.getType() == OPEN_PARENTHESIS || prevT.getType() == COMMA)) {
-				throw new IllegalArgumentException("Filter cannot and with a ',' or a '('.");
-			}
+			// parse excludes fields
+			curTree = res;
+			includeField = false;
+			LOG.debug("Parse exclude filter : {}", excFields);
+			curFieldsFilter = excFields;
+			parseFieldFilter();
 
-			if (parenthesisCount != 0) {
-				throw new IllegalArgumentException("No matching between '(' and ')' - diff=" + parenthesisCount);
-			}
-
-		} catch (
-
-		Exception e) {
-			throw new FieldFilterSyntaxException(incFields, token, prevT, e);
+		} catch (Exception e) {
+			throw new FieldFilterSyntaxException(curFieldsFilter, curToken, prevToken, e);
 		}
 
-		LOG.debug("Parse field filter \"{}\" to : {}", incFields, res);
+		LOG.debug("Parsing res : {}", res);
 
 		return res;
 
 	}
 
-	private FieldFilterTree processToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
-		switch (token.getType()) {
+	private void parseFieldFilter() {
+		curToken = curFieldsFilter.nextToken();
+		while (curToken != null) {
+			processToken();
+			// then current token become previous and fetch next one
+			prevToken = curToken;
+			curToken = curFieldsFilter.nextToken();
+		}
+
+		// final condition
+		if (prevToken != null && (prevToken.getType() == OPEN_PARENTHESIS || prevToken.getType() == COMMA)) {
+			throw new IllegalArgumentException("Filter cannot and with a ',' or a '('.");
+		}
+
+		if (parenthesisCount != 0) {
+			throw new IllegalArgumentException("No matching between '(' and ')' - diff=" + parenthesisCount);
+		}
+	}
+
+	private void processToken() {
+		switch (curToken.getType()) {
 		case FIELD_NAME:
-			curTree = processParamToken(curTree, token, prevT);
+			processParamToken();
 			break;
 		case COMMA:
-			curTree = processCommaToken(curTree, token, prevT);
+			processCommaToken();
 			break;
 		case CLOSE_PARENTHESIS:
-			curTree = processCloseParenthesisToken(curTree, token, prevT);
-			parenthesisCount--;
+			processCloseParenthesisToken();
 			break;
 		case OPEN_PARENTHESIS:
-			curTree = processOpenParenthesisToken(curTree, token, prevT);
-			parenthesisCount++;
+			processOpenParenthesisToken();
 			break;
 		default:
-			throw new IllegalArgumentException("Unknow token type : " + token.getType());
+			throw new IllegalArgumentException("Unknow token type : " + curToken.getType());
 		}
-		return curTree;
 	}
 
-	private FieldFilterTree processParamToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
-		curTree.addChild(token);
-		return curTree;
+	private void processParamToken() {
+		// if we are not in a skip mode
+		if (!skip) {
+			// exclude token case
+			if (!includeField) {
+				// go on only if there is no include child at this level
+				if (curTree.getIncludeFieldChildren().isEmpty()) {
+					curTree.addChild(curToken, includeField);
+				} else if(curTree.getIncludeFieldChild(curToken) != null) {
+					//there is an include child with the same name do nothing but let go further
+				} else {
+					skipFieldAndChild();
+					LOG.debug("ignoring '{}' field exlusion and all child field because other field is already include", curToken.getValue());
+				}
+			} else {
+				curTree.addChild(curToken, includeField);
+			}
+		}
 	}
 
-	private FieldFilterTree processCommaToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
-		if (prevT == null || (prevT.getType() == COMMA || prevT.getType() == OPEN_PARENTHESIS)) {
+	private void processCommaToken() {
+		if (prevToken == null || (prevToken.getType() == COMMA || prevToken.getType() == OPEN_PARENTHESIS)) {
 			throw new IllegalArgumentException("',' can't be after ',' , '(' or be at first position");
 		}
-		return curTree;
 	}
 
-	private FieldFilterTree processOpenParenthesisToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
-		if (prevT == null || prevT.getType() != FIELD_NAME) {
+	private void processOpenParenthesisToken() {
+		if (prevToken == null || prevToken.getType() != FIELD_NAME) {
 			throw new IllegalArgumentException("'(' can't be aftet ',', '(', ')' or ba at first position.");
 		}
 
-		curTree = curTree.getChild(prevT);
-		if (curTree == null) {
-			throw new IllegalStateException("no child node with name '" + prevT.getValue() + "'");
+		if (!skip) {
+			curTree = curTree.getChild(prevToken);
+			if (curTree == null) {
+				throw new IllegalStateException("no child node with name '" + prevToken.getValue() + "'");
+			}
 		}
-
-		return curTree;
+		parenthesisCount++;
 	}
 
-	private FieldFilterTree processCloseParenthesisToken(FieldFilterTree curTree, FieldFilterToken token, FieldFilterToken prevT) {
-		if (prevT == null || prevT.getType() == COMMA || prevT.getType() == OPEN_PARENTHESIS) {
+	private void processCloseParenthesisToken() {
+		if (prevToken == null || prevToken.getType() == COMMA || prevToken.getType() == OPEN_PARENTHESIS) {
 			throw new IllegalArgumentException("')' can't be after ',', '(' or be at first pos");
 		}
 
-		FieldFilterTree parentTree = curTree.getParent();
-		if (parentTree == null) {
-			throw new IllegalArgumentException("no '(' matching ')'");
+		if (!skip) {
+			FieldFilterTree parentTree = curTree.getParent();
+			if (parentTree == null) {
+				throw new IllegalArgumentException("no '(' matching ')'");
+			}
+			curTree = parentTree;
 		}
 
-		return parentTree;
+		if (skip && parenthesisCount <= skipCounterRef) {
+			skip = false;
+			LOG.debug("Leave the skip mode (parenthesis count = {}, skip counter ref = {})", parenthesisCount, skipCounterRef);
+		}
+		
+		parenthesisCount--;
+		
+	}
+
+	private void skipFieldAndChild() {
+		if (FIELD_NAME != curToken.getType()) {
+			throw new IllegalStateException("Current token is not a field name (curToken=" + curToken + ")");
+		}
+
+		// look at the next token
+		FieldFilterToken nextT = curFieldsFilter.prefetchToken();
+		// enter skip mode only if next token is open parentethis
+		if (nextT != null && OPEN_PARENTHESIS == nextT.getType()) {
+			skip = true;
+			// keep a ref to the parentethis counter to leave the skip mode
+			skipCounterRef = parenthesisCount + 1;
+			LOG.debug("Enter skip mode (ref counter = {})", skipCounterRef);
+		}
+
 	}
 }

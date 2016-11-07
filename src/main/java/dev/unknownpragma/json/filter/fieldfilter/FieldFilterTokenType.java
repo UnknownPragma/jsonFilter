@@ -1,7 +1,7 @@
 package dev.unknownpragma.json.filter.fieldfilter;
 
 public enum FieldFilterTokenType {
-	COMMA, OPEN_PARENTHESIS, CLOSE_PARENTHESIS, FIELD_NAME, INCLUDE_ALL, EXCLUDE_ALL;
+	COMMA, OPEN_PARENTHESIS, CLOSE_PARENTHESIS, FIELD_NAME;
 		
 	public static FieldFilterTokenType fromValue(String value) {
 		FieldFilterTokenType t = FIELD_NAME;

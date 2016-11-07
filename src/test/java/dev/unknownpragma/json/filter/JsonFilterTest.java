@@ -57,10 +57,10 @@ public class JsonFilterTest {
 		InputStreamReader reader = new InputStreamReader(this.getClass().getResourceAsStream("test3.json"));
 		StringWriter writer = new StringWriter();
 
-		jf.filter(reader, writer, null, null);
+		jf.filter(reader, writer, "a(aa(aaa,aab,aac),ab)", "a(aa(aac(aaca,aacb(aacba,aacbb))))");
 
 		LOG.info("res = {}", writer.toString());
-		// Assert.assertEquals(fileToString("test2.result.json"),writer.toString());
+		Assert.assertEquals(fileToString("test3.result.json"),writer.toString());
 	}
 
 	private String fileToString(String name) throws IOException {

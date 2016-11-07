@@ -3,6 +3,8 @@ package dev.unknownpragma.json.filter.fieldfilter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
+
 public class FieldFilterTree {
 
 	private FieldFilterToken data;
@@ -11,25 +13,26 @@ public class FieldFilterTree {
 
 	private List<FieldFilterTree> children = new ArrayList<>();
 
-	static FieldFilterTree createRoot() {
-		return new FieldFilterTree(null, new FieldFilterToken(null, null));
-	}
-	
-	public FieldFilterTree(FieldFilterTree parent, FieldFilterToken data) {
+	private boolean includeField;
+
+	public FieldFilterTree(FieldFilterTree parent, FieldFilterToken data, boolean includeField) {
+		Validate.notNull(data, "'data' can't be null");
+
 		this.parent = parent;
 		this.data = data;
-
-		if (data == null) {
-			throw new IllegalArgumentException("'data' can't be null");
-		}
+		this.includeField = includeField;
 	}
 
-	public FieldFilterTree addChild(FieldFilterToken child) {
+	static FieldFilterTree createRoot() {
+		return new FieldFilterTree(null, new FieldFilterToken(null, null), true);
+	}
+
+	public FieldFilterTree addChild(FieldFilterToken child, boolean includeField) {
 		if (getChild(child) != null) {
-			throw new IllegalArgumentException("Le token " + child + " existe déjà dans le noeud " + this);
+			throw new IllegalArgumentException("Token " + child + " already exist in " + this);
 		}
 
-		FieldFilterTree childNode = new FieldFilterTree(this, child);
+		FieldFilterTree childNode = new FieldFilterTree(this, child, includeField);
 		this.children.add(childNode);
 
 		return childNode;
@@ -45,6 +48,24 @@ public class FieldFilterTree {
 			if (aChild.getData().getValue() != null && aChild.getData().getValue().equals(childValue)) {
 				res = aChild;
 			}
+		}
+		return res;
+	}
+
+	public List<FieldFilterTree> getIncludeFieldChildren() {
+		List<FieldFilterTree> res = new ArrayList<>();
+		for (FieldFilterTree child : getChildren()) {
+			if (child.isIncludeField()) {
+				res.add(child);
+			}
+		}
+		return res;
+	}
+
+	public FieldFilterTree getIncludeFieldChild(FieldFilterToken child) {
+		FieldFilterTree res = getChild(child);
+		if (res != null && !res.isIncludeField()) {
+			res = null;
 		}
 		return res;
 	}
@@ -65,36 +86,29 @@ public class FieldFilterTree {
 		return children;
 	}
 
-	public String desc() {
-		String res = "";
-		boolean isRoot = false;
-		if (data.getValue() != null) {
-			res += data.getValue();
-		} else {
-			isRoot = true;
-		}
+	public boolean isIncludeField() {
+		return includeField;
+	}
 
-		if (!children.isEmpty()) {
-			res += isRoot?"":"(";
-			boolean first = true;
-			for (FieldFilterTree pt : children) {
-				if(first) {
-					first = false;
-				} else {
-					res += ",";
-				}
-				res += pt.desc();
-			}
-			res += isRoot?"":")";
-		}
+	public boolean isExcludeField() {
+		return !includeField;
+	}
 
-		return res;		
+	public boolean isExcludeLeafField() {
+		return isExcludeField() && getChildren().isEmpty();
 	}
 
 	@Override
 	public String toString() {
-		return data.getValue() + children;
+		String res = isIncludeField() ? "+" : "-";
+		if (data.getValue() != null) {
+			res = res + data.getValue();
+		}
+		if (children != null && !children.isEmpty()) {
+			res = res + children;
+		}
+
+		return res;
 	}
-	
-	
+
 }

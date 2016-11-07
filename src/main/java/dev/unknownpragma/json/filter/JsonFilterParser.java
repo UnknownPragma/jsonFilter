@@ -10,6 +10,8 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import dev.unknownpragma.json.filter.fieldfilter.FieldFilterTree;
 
+import static com.fasterxml.jackson.core.JsonToken.*;
+
 public class JsonFilterParser {
 
 	private static final Logger LOG = LoggerFactory.getLogger(JsonFilterParser.class);
@@ -39,37 +41,29 @@ public class JsonFilterParser {
 		tokenExclude = false;
 
 		// si c'est un nom de champs
-		if (JsonToken.FIELD_NAME.equals(t)) {
+		if (FIELD_NAME == t) {
 			processFieldToken();
-		} else if (JsonToken.START_OBJECT.equals(t) && !jsonParser.getParsingContext().getParent().inArray()) {
+		} else if (START_ARRAY == t || (START_OBJECT == t && !jsonParser.getParsingContext().getParent().inArray())) {
 			processStartObject();
-		} else if (JsonToken.END_OBJECT.equals(t) && !jsonParser.getParsingContext().inArray()) {
-			processEndObject();
-		} else if (JsonToken.START_ARRAY.equals(t)) {
-			processStartObject();
-		} else if (JsonToken.END_ARRAY.equals(t)) {
-			processEndObject();
+		} else if (END_ARRAY == t || END_OBJECT == t && !jsonParser.getParsingContext().inArray()) {
+			processEndObject();		
 		}
-
+		
 		LOG.debug("processed {} '{}' - curNode {}", t, currentFieldName, curNode);
 
 		return t;
 	}
 
 	private boolean isFieldSkipped() throws IOException {
-		boolean skip = true;
+		boolean skip = false;
 
-		// if includes is null ignore it else
-		if (curNode != null) {
-			// look if this field is include
-			FieldFilterTree tmpIncludes = curNode.getChild(currentFieldName);
-			if (tmpIncludes != null) {
-				skip = false;
-			}
-		} else {
-			skip = false;
+		FieldFilterTree fieldNode = curNode.getChild(currentFieldName);
+		// if the node has this field as an exclude child and this field has no child
+		if ((fieldNode != null && fieldNode.isExcludeLeafField())
+				// or if the field is not a child but there is other include field
+				|| (fieldNode == null && !curNode.getIncludeFieldChildren().isEmpty())) {
+			skip = true;
 		}
-
 		return skip;
 	}
 
@@ -89,15 +83,17 @@ public class JsonFilterParser {
 		if (isFieldSkipped()) {
 			tokenExclude = true;
 		} else {
-			if (curNode == null || curNode.getChild(currentFieldName).getChildren().isEmpty()) {
+			FieldFilterTree fieldNode = curNode.getChild(currentFieldName);
+			// if there no field or if this field has no children
+			if (fieldNode == null || fieldNode.getChildren().isEmpty()) {
 				structureFullyInclude = true;
 			}
 		}
 	}
 
 	private void processStartObject() {
-		// if no includes where specifed we ignore it
-		if (curNode != null && currentFieldName != null) {
+		// If it is a sub object
+		if (currentFieldName != null) {
 			// go down the tree following the field name
 			FieldFilterTree tmpIncludes = curNode.getChild(currentFieldName);
 			parentNode = curNode;
@@ -120,7 +116,7 @@ public class JsonFilterParser {
 	public JsonParser getJsonParser() {
 		return jsonParser;
 	}
-	
+
 	public boolean isStructureFullyInclude() {
 		return structureFullyInclude;
 	}
