@@ -1,26 +1,16 @@
 package dev.unknownpragma.json.filter.fieldfilter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import dev.unknownpragma.json.filter.fieldfilter.FieldFilterParser;
-import dev.unknownpragma.json.filter.fieldfilter.FieldFilterSyntaxException;
 
 @RunWith(JUnit4.class)
 public class FieldFilterParserTest {
-
-	private static final Logger LOG = LoggerFactory.getLogger(FieldFilterParserTest.class);
 
 	@Test
 	public void test() throws FieldFilterSyntaxException {
