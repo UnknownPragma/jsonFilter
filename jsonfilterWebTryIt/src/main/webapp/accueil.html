@@ -2,20 +2,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Demo authent</title>
-<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
-<script type="text/javascript" src="../js/jquery-2.1.4.js"></script>
+<title>Try Json Filter !</title>
+<script type="text/javascript" src="./resources/js/jquery-2.1.4.js"></script>
 <!-- Bootstrap -->
-<link href="../css/bootstrap.min.css" rel="stylesheet">
-<link href="../css/bootstrap-theme.min.css" rel="stylesheet">
+<link href="./resources/css/bootstrap.min.css" rel="stylesheet">
+<link href="./resources/css/bootstrap-theme.min.css" rel="stylesheet">
 <!-- CodeMirror -->
-<link rel="stylesheet" href="../css/codemirror.css">
-<script src="../js/codemirror.js"></script>
-<script src="../js/javascript.js"></script>
-<script>
-
-</script>
-<style></style>
+<link rel="stylesheet" href="./resources/css/codemirror.css">
+<script src="./resources/js/codemirror.js"></script>
+<script src="./resources/js/javascript.js"></script>
 </head>
 <body style="margin: 19px;">
 	<h1>Try Json Filter !</h1>
@@ -26,11 +21,11 @@
 				<div class="panel panel-default">
 					<textarea id="input" class="form-control" >
 {
-	"example" : {
-		"still_here" : "value",
-		"filtered_field" : "value"
-	},
-	"filtered_field" : "value" 
+   "example" : {
+      "still_here" : "value",
+      "filtered_field" : "value"
+   },
+   "filtered_field" : "value" 
 }
 					</textarea>
 				</div>
@@ -85,8 +80,8 @@
 	  output.setSize(null, 180);
 	  
 	function filter() {
-			$.post("/jsonfilter", {
-				"content" : $('#input').val(),
+			$.post("./jsonfilter", {
+				"content" : editor.getValue(),
 				"fields" : $('#fields').val(),
 				"excFields" : $('#exc_fields').val()
 			}, function(data) {
